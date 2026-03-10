@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator KPR — Cicilan & Biaya</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #f2f7f4;
+    --warm:     #e8f2ec;
+    --sand:     #cde3d5;
+    --primary:  #2e7d52;
+    --primary-light: #4a9e6e;
+    --primary-dark:  #1a5236;
+    --dark:     #1a2e24;
+    --muted:    #5a7a68;
+    --accent1:  #3a7a5e;
+    --accent2:  #5a9e72;
+    --blue:     #3a6e7a;
+    --blue-light: #e0f0f4;
+    --amber:    #8a6a2e;
+    --amber-light: #f5edd8;
+    --red:      #8a3a3a;
+    --red-light: #f5e0e0;
+    --white:    #ffffff;
+    --radius:   16px;
+    --shadow:   0 4px 24px rgba(30,60,40,0.09);
+    --shadow-lg:0 8px 40px rgba(30,60,40,0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--dark); min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 55%, var(--primary-light) 100%);
+    padding: 48px 24px 56px; text-align: center; position: relative; overflow: hidden;
+  }
+  header::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  header h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,5vw,40px); color: #fff; letter-spacing: -0.5px; position: relative; }
+  header p { color: rgba(255,255,255,0.80); font-size: 14px; font-weight: 300; margin-top: 8px; position: relative; }
+  .header-icon { font-size: 38px; margin-bottom: 10px; display: block; position: relative; }
+
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 32px 0; }
+  @media(max-width:820px) { .main-grid { grid-template-columns: 1fr; } }
+
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .card-header { padding: 18px 24px 15px; border-bottom: 1px solid var(--sand); display: flex; align-items: center; gap: 10px; background: var(--warm); }
+  .card-header h2 { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--primary-dark); }
+  .card-icon { font-size: 20px; }
+  .card-body { padding: 22px 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 6px; }
+  .input-wrap { position: relative; }
+  .input-wrap .prefix { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); font-weight: 500; pointer-events: none; }
+  .input-wrap .suffix { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); font-weight: 500; pointer-events: none; }
+  .input-wrap input[type="number"] {
+    width: 100%; padding: 10px 38px 10px 36px;
+    border: 1.5px solid var(--sand); border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--dark);
+    background: var(--bg); outline: none; transition: border-color 0.2s, background 0.2s;
+  }
+  .input-wrap input:focus { border-color: var(--primary); background: #fff; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .slider-field { margin-bottom: 16px; }
+  .slider-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .slider-label-row label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); }
+  .slider-val { font-size: 13px; font-weight: 700; color: var(--primary); background: var(--warm); padding: 2px 10px; border-radius: 20px; border: 1px solid var(--sand); }
+  input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: var(--sand); border-radius: 10px; outline: none; cursor: pointer; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--primary); border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(46,125,82,0.35); }
+
+  .btn-calc { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; border: none; border-radius: 12px; cursor: pointer; margin-top: 6px; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(26,82,54,0.28); }
+  .btn-calc:hover { opacity: 0.9; }
+  .btn-calc:active { transform: scale(0.98); }
+
+  .result-section { padding: 0 24px 24px; }
+  .result-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 14px; padding-top: 18px; border-top: 1px dashed var(--sand); }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--warm); font-size: 13.5px; }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { color: var(--muted); }
+  .result-row .val { font-weight: 600; color: var(--dark); }
+  .result-highlight { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); border-radius: 12px; padding: 16px 20px; margin: 14px 0; display: flex; justify-content: space-between; align-items: center; }
+  .result-highlight .hl-label { color: rgba(255,255,255,0.82); font-size: 12px; }
+  .result-highlight .hl-val { color: #fff; font-size: 22px; font-weight: 700; font-family: 'Playfair Display', serif; }
+  .tag-dp { background: var(--warm); color: var(--primary); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px; display: inline-block; margin-left: 5px; border: 1px solid var(--sand); }
+
+  .biaya-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--warm); font-size: 13px; }
+  .biaya-item:last-child { border-bottom: none; }
+  .biaya-item .b-label { color: var(--muted); }
+  .biaya-item .b-val { font-weight: 600; color: var(--dark); }
+  .total-biaya { background: var(--warm); border-radius: 10px; padding: 13px 16px; display: flex; justify-content: space-between; margin-top: 10px; font-weight: 700; color: var(--primary-dark); font-size: 14px; border: 1px solid var(--sand); }
+  .info-box { background: var(--blue-light); border-left: 4px solid var(--blue); border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 12.5px; color: var(--blue); margin-top: 14px; line-height: 1.6; }
+
+  .badge-recommended { display: inline-block; background: var(--warm); color: var(--primary); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--sand); }
+
+  .dashboard-section { padding: 0 0 40px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 21px; color: var(--primary-dark); margin-bottom: 5px; }
+  .section-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 16px; }
+  .dash-card { background: #fff; border-radius: 14px; box-shadow: var(--shadow); padding: 20px; border-top: 4px solid var(--sand); transition: transform 0.2s, box-shadow 0.2s; }
+  .dash-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .dash-card.rate-75 { border-top-color: var(--accent1); }
+  .dash-card.rate-8  { border-top-color: var(--accent2); }
+  .dash-card.rate-10 { border-top-color: var(--amber); }
+  .dash-card.rate-11 { border-top-color: var(--red); }
+
+  .dash-rate { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .rate-75 .dash-rate { color: var(--accent1); }
+  .rate-8  .dash-rate { color: var(--accent2); }
+  .rate-10 .dash-rate { color: var(--amber); }
+  .rate-11 .dash-rate { color: var(--red); }
+
+  .dash-cicilan { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
+  .dash-sub { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .dash-bar-wrap { background: var(--warm); border-radius: 4px; height: 6px; margin: 8px 0 10px; overflow: hidden; }
+  .dash-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .rate-75 .dash-bar { background: var(--accent1); }
+  .rate-8  .dash-bar { background: var(--accent2); }
+  .rate-10 .dash-bar { background: var(--amber); }
+  .rate-11 .dash-bar { background: var(--red); }
+  .dash-detail { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .dash-detail span { color: var(--dark); font-weight: 600; }
+
+  .dash-tenor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .tenor-item { background: var(--bg); border-radius: 8px; padding: 7px 10px; font-size: 12px; border: 1px solid var(--sand); }
+  .tenor-item .t-year { color: var(--muted); font-size: 11px; }
+  .tenor-item .t-cicilan { font-weight: 700; color: var(--dark); font-size: 12px; }
+
+  footer { text-align: center; padding: 22px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--sand); }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .card { animation: fadeUp 0.35s ease both; }
+  .dash-card { animation: fadeUp 0.35s ease both; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-icon">🏠</span>
+  <h1>Kalkulator KPR Indonesia</h1>
+  <p>Hitung cicilan, DP, dan biaya-biaya pembelian rumah secara lengkap</p>
+</header>
+
+<div class="container">
+  <div class="main-grid">
+
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📋</span>
+          <h2>Data KPR</h2>
+        </div>
+        <div class="card-body">
+
+          <div class="field">
+            <label>Harga Rumah</label>
+            <div class="input-wrap">
+              <span class="prefix">Rp</span>
+              <input type="number" id="hargaRumah" value="500000000" min="0" step="1000000" oninput="update()">
+            </div>
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label>Uang Muka (DP)</label>
+              <span class="slider-val" id="dpPctLabel">20%</span>
+            </div>
+            <input type="range" id="dpPct" min="10" max="90" value="20" step="1" oninput="updateSlider()">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;"><span>Min 10%</span><span>Max 90%</span></div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Jumlah DP</label>
+              <div class="input-wrap">
+                <span class="prefix">Rp</span>
+                <input type="number" id="dpNominal" value="100000000" min="0" step="1000000" oninput="updateFromDP()">
+              </div>
+            </div>
+            <div class="field">
+              <label>Plafon Pinjaman</label>
+              <div class="input-wrap">
+                <span class="prefix">Rp</span>
+                <input type="number" id="plafonView" value="400000000" disabled style="background:var(--warm);cursor:not-allowed;color:var(--muted);">
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Suku Bunga / Tahun</label>
+              <div class="input-wrap">
+                <input type="number" id="bunga" value="9" min="1" max="30" step="0.1" oninput="update()">
+                <span class="suffix">%</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Tenor</label>
+              <div class="input-wrap">
+                <input type="number" id="tenor" value="15" min="1" max="30" step="1" oninput="update()">
+                <span class="suffix">tahun</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Penghasilan Bulanan Pemohon</label>
+            <div class="input-wrap">
+              <span class="prefix">Rp</span>
+              <input type="number" id="gaji" value="15000000" min="0" step="500000" oninput="update()">
+            </div>
+          </div>
+
+          <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px;border:1px solid var(--sand);">
+            📌 <strong>NJOP</strong> diasumsikan otomatis <strong style="color:var(--primary)">50% dari harga rumah</strong> untuk menghitung BPHTB.
+          </div>
+
+          <button class="btn-calc" onclick="update()">🔄 Hitung Ulang</button>
+        </div>
+
+        <div class="result-section" id="resultCicilan">
+          <div class="result-title">📊 Hasil Perhitungan Cicilan</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">💸</span>
+          <h2>Biaya Tambahan & Pajak</h2>
+        </div>
+        <div class="card-body" id="biayaTambahan"></div>
+      </div>
+      <div class="card" style="margin-top:22px;">
+        <div class="card-header">
+          <span class="card-icon">📈</span>
+          <h2>Kelayakan Pemohon</h2>
+        </div>
+        <div class="card-body" id="kelayakanSection"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="dashboard-section">
+    <div class="section-title">📊 Dashboard Perbandingan Suku Bunga</div>
+    <div class="section-sub">Simulasi cicilan dengan 4 skenario suku bunga, berdasarkan plafon & tenor di atas</div>
+    <div class="dash-grid" id="dashboardGrid"></div>
+  </div>
+</div>
+
+<footer>
+  ⚠️ Kalkulasi ini bersifat estimasi. Angka aktual dapat berbeda tergantung kebijakan bank masing-masing.<br>
+  Konsultasikan ke bank atau agen properti untuk informasi lebih lanjut.
+</footer>
+
+<script>
+  const fmt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+  const fmtShort = n => {
+    if(n >= 1e9) return 'Rp ' + (n/1e9).toFixed(2).replace(/\.00$/,'') + ' M';
+    if(n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1).replace(/\.0$/,'') + ' jt';
+    return fmt(n);
+  };
+
+  function hitungCicilan(plafon, bungaTahunan, tenorTahun) {
+    const r = bungaTahunan / 100 / 12;
+    const n = tenorTahun * 12;
+    if(r === 0) return plafon / n;
+    return plafon * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
+  }
+
+  function updateSlider() {
+    const harga = +document.getElementById('hargaRumah').value || 0;
+    const pct   = +document.getElementById('dpPct').value;
+    document.getElementById('dpPctLabel').textContent = pct + '%';
+    document.getElementById('dpNominal').value = Math.round(harga * pct / 100);
+    update();
+  }
+
+  function updateFromDP() {
+    const harga = +document.getElementById('hargaRumah').value || 1;
+    const dp    = +document.getElementById('dpNominal').value || 0;
+    const pct   = Math.min(90, Math.max(10, Math.round(dp / harga * 100)));
+    document.getElementById('dpPct').value = pct;
+    document.getElementById('dpPctLabel').textContent = pct + '%';
+    update();
+  }
+
+  function update() {
+    const harga  = +document.getElementById('hargaRumah').value || 0;
+    const dpPct  = +document.getElementById('dpPct').value;
+    const dp     = harga * dpPct / 100;
+    document.getElementById('dpNominal').value = Math.round(dp);
+    const plafon = harga - dp;
+    document.getElementById('plafonView').value = Math.round(plafon);
+    const bunga  = +document.getElementById('bunga').value || 0;
+    const tenor  = +document.getElementById('tenor').value || 1;
+    const gaji   = +document.getElementById('gaji').value || 0;
+    const njop   = harga * 0.5; // otomatis 50%
+
+    const cicilan    = hitungCicilan(plafon, bunga, tenor);
+    const totalBayar = cicilan * tenor * 12;
+    const totalBunga = totalBayar - plafon;
+
+    document.getElementById('resultCicilan').innerHTML = `
+      <div class="result-title">📊 Hasil Perhitungan Cicilan</div>
+      <div class="result-highlight">
+        <div>
+          <div class="hl-label">Cicilan per Bulan</div>
+          <div class="hl-val">${fmtShort(cicilan)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="hl-label">Bunga ${bunga}% / ${tenor} thn</div>
+          <div style="color:rgba(255,255,255,0.7);font-size:12px;margin-top:4px;">Metode Annuitas</div>
+        </div>
+      </div>
+      <div class="result-row"><span class="label">Harga Rumah</span><span class="val">${fmt(harga)}</span></div>
+      <div class="result-row"><span class="label">Uang Muka (DP) ${dpPct}%</span><span class="val">${fmt(dp)} <span class="tag-dp">DP ${dpPct}%</span></span></div>
+      <div class="result-row"><span class="label">Plafon Pinjaman</span><span class="val">${fmt(plafon)}</span></div>
+      <div class="result-row"><span class="label">Total Bunga</span><span class="val">${fmt(totalBunga)}</span></div>
+      <div class="result-row"><span class="label">Total Pembayaran</span><span class="val" style="color:var(--primary-dark)">${fmt(totalBayar)}</span></div>
+    `;
+
+    const provisi           = plafon * 0.01;
+    const admin             = 750000;
+    const notaris           = harga * 0.015;
+    const bphtbBase         = Math.max(0, njop - 60000000);
+    const bphtb             = bphtbBase * 0.05;
+    const asuransiJiwa      = plafon * 0.003 * tenor * 0.5;
+    const asuransiKebakaran = harga * 0.001;
+    const totalBiaya        = provisi + admin + notaris + bphtb + asuransiJiwa + asuransiKebakaran;
+    const totalAwal         = dp + totalBiaya;
+
+    document.getElementById('biayaTambahan').innerHTML = `
+      <div class="biaya-item"><span class="b-label">💳 Provisi Bank (~1% dari plafon)</span><span class="b-val">${fmt(provisi)}</span></div>
+      <div class="biaya-item"><span class="b-label">🏦 Biaya Administrasi</span><span class="b-val">${fmt(admin)}</span></div>
+      <div class="biaya-item"><span class="b-label">📜 Notaris & AJB (~1.5%)</span><span class="b-val">${fmt(notaris)}</span></div>
+      <div class="biaya-item">
+        <span class="b-label">🏛️ BPHTB <span style="font-size:11px;">(NJOP ≈ ${fmtShort(njop)})</span></span>
+        <span class="b-val">${fmt(bphtb)}</span>
+      </div>
+      <div class="biaya-item"><span class="b-label">🛡️ Asuransi Jiwa (estimasi)</span><span class="b-val">${fmt(asuransiJiwa)}</span></div>
+      <div class="biaya-item"><span class="b-label">🔥 Asuransi Kebakaran (estimasi)</span><span class="b-val">${fmt(asuransiKebakaran)}</span></div>
+      <div class="total-biaya"><span>Total Biaya Tambahan</span><span>${fmt(totalBiaya)}</span></div>
+      <div style="margin-top:12px;background:var(--warm);border-radius:10px;padding:13px 16px;border:1px solid var(--sand);">
+        <div class="result-row" style="padding:6px 0;"><span class="label">DP yang disiapkan</span><span class="val">${fmt(dp)}</span></div>
+        <div class="result-row" style="padding:6px 0;border-bottom:none;"><span class="label">+ Biaya Tambahan</span><span class="val">+ ${fmt(totalBiaya)}</span></div>
+        <div style="border-top:2px solid var(--sand);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;font-size:14px;color:var(--primary-dark);">
+          <span>💰 Total Dana Awal Dibutuhkan</span><span>${fmt(totalAwal)}</span>
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>ℹ️ Catatan:</strong> NJOP diasumsikan 50% dari harga rumah (${fmtShort(njop)}). BPHTB = 5% × (NJOP − Rp60jt). Asuransi adalah estimasi — konfirmasi ke bank untuk angka pasti.
+      </div>
+    `;
+
+    const ratio    = gaji > 0 ? (cicilan / gaji * 100) : 0;
+    const status   = ratio === 0 ? 'grey' : ratio <= 30 ? 'green' : ratio <= 40 ? 'amber' : 'red';
+    const stText   = { grey:'— Masukkan gaji untuk cek kelayakan', green:'✅ Cicilan dalam batas aman (≤30% gaji)', amber:'⚠️ Cicilan agak berat (30–40% gaji)', red:'❌ Cicilan melebihi batas aman (>40% gaji)' };
+    const stColor  = { grey:'var(--muted)', green:'var(--primary)', amber:'var(--amber)', red:'var(--red)' };
+    const stBg     = { grey:'var(--warm)', green:'var(--warm)', amber:'var(--amber-light)', red:'var(--red-light)' };
+    const maxCicilan  = gaji * 0.3;
+    const gajiMinBank = cicilan / 0.3;
+
+    document.getElementById('kelayakanSection').innerHTML = `
+      <div style="background:${stBg[status]};border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--sand);">
+        <div style="font-size:13px;font-weight:700;color:${stColor[status]};margin-bottom:6px;">${stText[status]}</div>
+        ${gaji > 0 ? `
+        <div style="background:var(--sand);border-radius:4px;height:7px;overflow:hidden;margin:8px 0;">
+          <div style="height:100%;border-radius:4px;background:${stColor[status]};width:${Math.min(100,ratio)}%;transition:width 0.6s;"></div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Rasio cicilan/gaji: <strong style="color:${stColor[status]}">${ratio.toFixed(1)}%</strong> (batas aman ≤30%)</div>
+        ` : ''}
+      </div>
+      <div class="result-row"><span class="label">Cicilan / Bulan</span><span class="val">${fmt(cicilan)}</span></div>
+      <div class="result-row"><span class="label">Penghasilan</span><span class="val">${gaji > 0 ? fmt(gaji) : '—'}</span></div>
+      <div class="result-row"><span class="label">Maks. cicilan aman (30%)</span><span class="val">${gaji > 0 ? fmt(maxCicilan) : '—'}</span></div>
+      <div class="result-row" style="border-bottom:none"><span class="label">Gaji min. untuk cicilan ini</span><span class="val" style="color:var(--primary-dark)">${fmt(gajiMinBank)}</span></div>
+    `;
+
+    renderDashboard(plafon, tenor);
+  }
+
+  function renderDashboard(plafon, tenor) {
+    const rates = [
+      { rate:7.5, label:'7,5%', cls:'rate-75' },
+      { rate:8,   label:'8%',   cls:'rate-8'  },
+      { rate:10,  label:'10%',  cls:'rate-10' },
+      { rate:11,  label:'11%',  cls:'rate-11' },
+    ];
+    const tenors = [10, 15, 20, 25];
+    const maxC = Math.max(...rates.map(r => hitungCicilan(plafon, r.rate, tenor)));
+
+    document.getElementById('dashboardGrid').innerHTML = rates.map((r,i) => {
+      const cicilan    = hitungCicilan(plafon, r.rate, tenor);
+      const totalBayar = cicilan * tenor * 12;
+      const totalBunga = totalBayar - plafon;
+      const barW       = maxC > 0 ? (cicilan/maxC*100) : 0;
+      const tRows      = tenors.map(t => {
+        const c = hitungCicilan(plafon, r.rate, t);
+        return `<div class="tenor-item"><div class="t-year">${t} thn</div><div class="t-cicilan">${fmtShort(c)}/bln</div></div>`;
+      }).join('');
+      return `
+        <div class="dash-card ${r.cls}" style="animation-delay:${i*0.07}s">
+          ${i===0 ? '<div class="badge-recommended">✨ Paling Ringan</div>' : ''}
+          <div class="dash-rate">Suku Bunga ${r.label} / tahun</div>
+          <div class="dash-cicilan">${fmtShort(cicilan)}</div>
+          <div class="dash-sub">per bulan · tenor ${tenor} tahun</div>
+          <div class="dash-bar-wrap"><div class="dash-bar" style="width:${barW}%"></div></div>
+          <div class="dash-detail">Total Bunga: <span>${fmtShort(totalBunga)}</span><br>Total Bayar: <span>${fmtShort(totalBayar)}</span></div>
+          <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 6px;">Simulasi Tenor Lain</div>
+          <div class="dash-tenor-grid">${tRows}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  update();
+</script>
+</body>
+</html>
