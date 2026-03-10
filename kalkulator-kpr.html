@@ -56,15 +56,25 @@
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 6px; }
   .input-wrap { position: relative; }
-  .input-wrap .prefix { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); font-weight: 500; pointer-events: none; }
+  .input-wrap .prefix {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    display: flex; align-items: center; padding: 0 10px 0 12px;
+    font-size: 12px; color: #fff; font-weight: 700; pointer-events: none;
+    background: var(--primary); border-radius: 9px 0 0 9px; z-index: 1;
+    min-width: 36px; justify-content: center;
+  }
   .input-wrap .suffix { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); font-weight: 500; pointer-events: none; }
-  .input-wrap input[type="number"] {
-    width: 100%; padding: 10px 38px 10px 36px;
+  .input-wrap input[type="number"],
+  .input-wrap input[type="text"] {
+    width: 100%; padding: 10px 14px 10px 48px;
     border: 1.5px solid var(--sand); border-radius: 10px;
     font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--dark);
     background: var(--bg); outline: none; transition: border-color 0.2s, background 0.2s;
   }
+  .input-wrap input[type="number"].has-suffix,
+  .input-wrap input[type="text"].has-suffix { padding-right: 48px; padding-left: 14px; }
   .input-wrap input:focus { border-color: var(--primary); background: #fff; }
+  .input-wrap input:disabled { background: var(--warm) !important; cursor: not-allowed; color: var(--muted) !important; }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .slider-field { margin-bottom: 16px; }
@@ -162,7 +172,7 @@
             <label>Harga Rumah</label>
             <div class="input-wrap">
               <span class="prefix">Rp</span>
-              <input type="number" id="hargaRumah" value="500000000" min="0" step="1000000" oninput="update()">
+              <input type="text" id="hargaRumah" value="500.000.000" inputmode="numeric" oninput="fmtInput(this); update()">
             </div>
           </div>
 
@@ -180,14 +190,14 @@
               <label>Jumlah DP</label>
               <div class="input-wrap">
                 <span class="prefix">Rp</span>
-                <input type="number" id="dpNominal" value="100000000" min="0" step="1000000" oninput="updateFromDP()">
+                <input type="text" id="dpNominal" value="100.000.000" inputmode="numeric" oninput="fmtInput(this); updateFromDP()">
               </div>
             </div>
             <div class="field">
               <label>Plafon Pinjaman</label>
               <div class="input-wrap">
                 <span class="prefix">Rp</span>
-                <input type="number" id="plafonView" value="400000000" disabled style="background:var(--warm);cursor:not-allowed;color:var(--muted);">
+                <input type="text" id="plafonView" value="400.000.000" disabled>
               </div>
             </div>
           </div>
@@ -196,14 +206,14 @@
             <div class="field">
               <label>Suku Bunga / Tahun</label>
               <div class="input-wrap">
-                <input type="number" id="bunga" value="9" min="1" max="30" step="0.1" oninput="update()">
+                <input type="number" id="bunga" value="9" min="1" max="30" step="0.1" class="has-suffix" oninput="update()">
                 <span class="suffix">%</span>
               </div>
             </div>
             <div class="field">
               <label>Tenor</label>
               <div class="input-wrap">
-                <input type="number" id="tenor" value="15" min="1" max="30" step="1" oninput="update()">
+                <input type="number" id="tenor" value="15" min="1" max="30" step="1" class="has-suffix" oninput="update()">
                 <span class="suffix">tahun</span>
               </div>
             </div>
@@ -213,7 +223,7 @@
             <label>Penghasilan Bulanan Pemohon</label>
             <div class="input-wrap">
               <span class="prefix">Rp</span>
-              <input type="number" id="gaji" value="15000000" min="0" step="500000" oninput="update()">
+              <input type="text" id="gaji" value="15.000.000" inputmode="numeric" oninput="fmtInput(this); update()">
             </div>
           </div>
 
@@ -269,6 +279,30 @@
     return fmt(n);
   };
 
+  // Format input dengan titik pemisah ribuan saat mengetik
+  function fmtInput(el) {
+    const pos = el.selectionStart;
+    const oldLen = el.value.length;
+    const raw = el.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+    if(raw === '') { el.value = ''; return; }
+    const formatted = parseInt(raw).toLocaleString('id-ID');
+    el.value = formatted;
+    // jaga posisi cursor
+    const newLen = el.value.length;
+    el.selectionStart = el.selectionEnd = pos + (newLen - oldLen);
+  }
+
+  // Baca nilai numerik dari input yang sudah diformat
+  function getVal(id) {
+    const v = document.getElementById(id).value.replace(/\./g,'').replace(/[^0-9]/g,'');
+    return parseInt(v) || 0;
+  }
+
+  // Set nilai ke input dengan format titik ribuan
+  function setVal(id, num) {
+    document.getElementById(id).value = Math.round(num).toLocaleString('id-ID');
+  }
+
   function hitungCicilan(plafon, bungaTahunan, tenorTahun) {
     const r = bungaTahunan / 100 / 12;
     const n = tenorTahun * 12;
@@ -277,16 +311,16 @@
   }
 
   function updateSlider() {
-    const harga = +document.getElementById('hargaRumah').value || 0;
+    const harga = getVal('hargaRumah');
     const pct   = +document.getElementById('dpPct').value;
     document.getElementById('dpPctLabel').textContent = pct + '%';
-    document.getElementById('dpNominal').value = Math.round(harga * pct / 100);
+    setVal('dpNominal', harga * pct / 100);
     update();
   }
 
   function updateFromDP() {
-    const harga = +document.getElementById('hargaRumah').value || 1;
-    const dp    = +document.getElementById('dpNominal').value || 0;
+    const harga = getVal('hargaRumah') || 1;
+    const dp    = getVal('dpNominal');
     const pct   = Math.min(90, Math.max(10, Math.round(dp / harga * 100)));
     document.getElementById('dpPct').value = pct;
     document.getElementById('dpPctLabel').textContent = pct + '%';
@@ -294,15 +328,15 @@
   }
 
   function update() {
-    const harga  = +document.getElementById('hargaRumah').value || 0;
+    const harga  = getVal('hargaRumah');
     const dpPct  = +document.getElementById('dpPct').value;
     const dp     = harga * dpPct / 100;
-    document.getElementById('dpNominal').value = Math.round(dp);
+    setVal('dpNominal', dp);
     const plafon = harga - dp;
-    document.getElementById('plafonView').value = Math.round(plafon);
+    setVal('plafonView', plafon);
     const bunga  = +document.getElementById('bunga').value || 0;
     const tenor  = +document.getElementById('tenor').value || 1;
-    const gaji   = +document.getElementById('gaji').value || 0;
+    const gaji   = getVal('gaji');
     const njop   = harga * 0.5; // otomatis 50%
 
     const cicilan    = hitungCicilan(plafon, bunga, tenor);
